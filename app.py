@@ -12,7 +12,12 @@ from scripts.convert_to_pdf import create_pdf
 app = Flask(__name__)
 
 # Directory to store generated ebooks
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+# On Vercel, we MUST use /tmp as the rest of the filesystem is read-only
+if os.environ.get('VERCEL'):
+    OUTPUT_DIR = "/tmp"
+else:
+    OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ============================================================
