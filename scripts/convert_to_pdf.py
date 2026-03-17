@@ -155,11 +155,11 @@ def create_pdf(input_file, output_file, book_title=None):
     pdf.ln(10)
     pdf.set_font('helvetica', 'I', 13)
     pdf.set_text_color(80, 80, 80)
-    pdf.cell(0, 10, 'AI-Generated Professional eBook', new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(0, 10, 'ultimate guide', new_x="LMARGIN", new_y="NEXT", align='C')
     pdf.ln(60)
     pdf.set_font('helvetica', '', 11)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 8, 'Created by eBook Agent', new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(0, 8, 'Created by Mizan', new_x="LMARGIN", new_y="NEXT", align='C')
 
     # ===========================
     # TABLE OF CONTENTS
