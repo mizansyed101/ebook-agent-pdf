@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBook Agent — AI-Powered eBook Generator</title>
+    <meta name="description" content="Generate professional PDF eBooks on any topic using AI. Choose from Gemini, OpenAI, Claude, Groq or OpenRouter.">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-badge">
+                <span class="dot"></span>
+                AI-Powered Agent
+            </div>
+            <h1>eBook Agent</h1>
+            <p>Enter any topic, choose your AI model, and watch it research, write, and format a professional PDF eBook in real-time.</p>
+        </header>
+
+        <!-- Error Display -->
+        <div class="error-card" id="errorCard">
+            <span class="error-icon">&#9888;</span>
+            <span class="error-message" id="errorMessage"></span>
+        </div>
+
+        <!-- Input Card -->
+        <div class="input-card" id="inputCard">
+            <!-- Topic -->
+            <div class="form-group">
+                <label class="form-label" for="topicInput">
+                    <span class="icon">&#9997;</span>
+                    Topic
+                </label>
+                <input 
+                    type="text" 
+                    id="topicInput" 
+                    class="form-input" 
+                    placeholder="e.g. Your Fear of Failure is Just Disguised Arrogance"
+                    autocomplete="off"
+                >
+            </div>
+
+            <!-- Provider + Model Row -->
+            <div class="form-row">
+                <div class="form-group form-group-half">
+                    <label class="form-label" for="providerSelect">
+                        <span class="icon">&#9889;</span>
+                        AI Provider
+                    </label>
+                    <select id="providerSelect" class="form-input form-select" onchange="onProviderChange()">
+                        <option value="gemini">Google Gemini</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="anthropic">Anthropic Claude</option>
+                        <option value="groq">Groq</option>
+                        <option value="openrouter">OpenRouter</option>
+                    </select>
+                </div>
+                <div class="form-group form-group-half">
+                    <label class="form-label" for="modelSelect">
+                        <span class="icon">&#9881;</span>
+                        Model
+                    </label>
+                    <select id="modelSelect" class="form-input form-select"></select>
+                </div>
+            </div>
+
+            <!-- API Key -->
+            <div class="form-group">
+                <label class="form-label" for="apiKeyInput">
+                    <span class="icon">&#128273;</span>
+                    API Key
+                </label>
+                <input 
+                    type="password" 
+                    id="apiKeyInput" 
+                    class="form-input" 
+                    placeholder="Enter your API key"
+                    autocomplete="off"
+                >
+                <div class="form-hint" id="apiKeyHint">Your key is used only for this session and never stored.</div>
+            </div>
+
+            <button class="generate-btn" id="generateBtn" onclick="startGeneration()">
+                <span class="btn-content">
+                    <span class="spinner"></span>
+                    <span class="btn-text">Generate eBook</span>
+                </span>
+            </button>
+        </div>
+
+        <!-- Progress Panel -->
+        <div class="progress-panel" id="progressPanel">
+            <div class="progress-header">
+                <span class="progress-title">Generating eBook</span>
+                <span class="progress-counter" id="progressCounter">0%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <ul class="step-list" id="stepList"></ul>
+        </div>
+
+        <!-- Result Card -->
+        <div class="result-card" id="resultCard">
+            <div class="result-icon">&#10003;</div>
+            <div class="result-title" id="resultTitle">eBook Ready!</div>
+            <div class="result-subtitle" id="resultSubtitle">Your professional PDF has been generated.</div>
+            <a class="download-btn" id="downloadBtn" href="#">
+                &#11015; Download PDF
+            </a>
+            <br>
+            <button class="new-btn" onclick="resetApp()">
+                &#10227; Generate Another
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            eBook Agent &mdash; Supports Gemini, OpenAI, Claude, Groq &amp; OpenRouter
+        </footer>
+    </div>
+
+    <script>
+        // ========= PROVIDER CONFIG =========
+        const PROVIDERS = {
+            gemini: {
+                name: "Google Gemini",
+                models: ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"],
+                placeholder: "Enter your Google Gemini API key"
+            },
+            openai: {
+                name: "OpenAI",
+                models: ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1-nano"],
+                placeholder: "Enter your OpenAI API key (sk-...)"
+            },
+            anthropic: {
+                name: "Anthropic Claude",
+                models: ["claude-sonnet-4-20250514", "claude-3-5-haiku-20241022"],
+                placeholder: "Enter your Anthropic API key (sk-ant-...)"
+            },
+            groq: {
+                name: "Groq",
+                models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
+                placeholder: "Enter your Groq API key (gsk_...)"
+            },
+            openrouter: {
+                name: "OpenRouter",
+                models: ["google/gemini-2.0-flash-exp:free", "meta-llama/llama-3.3-70b-instruct:free", "deepseek/deepseek-chat-v3-0324:free"],
+                placeholder: "Enter your OpenRouter API key (sk-or-...)"
+            }
+        };
+
+        let stepCount = 0;
+        let totalSteps = 14;
+
+        // ========= INIT =========
+        document.addEventListener('DOMContentLoaded', function() {
+            onProviderChange();
+        });
+
+        function onProviderChange() {
+            const provider = document.getElementById('providerSelect').value;
+            const config = PROVIDERS[provider];
+            
+            // Update model dropdown
+            const modelSelect = document.getElementById('modelSelect');
+            modelSelect.innerHTML = '';
+            config.models.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                modelSelect.appendChild(opt);
+            });
+
+            // Update API key placeholder
+            document.getElementById('apiKeyInput').placeholder = config.placeholder;
+        }
+
+        // ========= MAIN FUNCTION =========
+        function startGeneration() {
+            const topic = document.getElementById('topicInput').value.trim();
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            const provider = document.getElementById('providerSelect').value;
+            const model = document.getElementById('modelSelect').value;
+
+            if (!topic) { showError('Please enter a topic for your eBook.'); return; }
+            if (!apiKey) { showError('Please enter your API key.'); return; }
+
+            // Reset UI
+            hideError();
+            stepCount = 0;
+            document.getElementById('stepList').innerHTML = '';
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressCounter').textContent = '0%';
+
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            btn.querySelector('.btn-text').textContent = 'Generating...';
+            document.getElementById('progressPanel').classList.add('active');
+            document.getElementById('resultCard').classList.remove('active');
+
+            // Start SSE
+            fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic, api_key: apiKey, provider, model })
+            }).then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                function read() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) return;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop();
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+                                    handleEvent(data);
+                                } catch (e) {}
+                            }
+                        }
+                        read();
+                    });
+                }
+                read();
+            }).catch(err => {
+                showError('Connection error: ' + err.message);
+                resetButton();
+            });
+        }
+
+        // ========= EVENT HANDLER =========
+        function handleEvent(data) {
+            if (data.phase === 'error') {
+                showError(data.message);
+                resetButton();
+                addStep(data.message, 'error');
+                return;
+            }
+
+            if (data.phase === 'outline') {
+                if (data.status === 'generating') {
+                    addStep(data.message, 'active');
+                } else {
+                    updateLastStep(data.message, 'done');
+                    stepCount++;
+                    if (data.total) totalSteps = data.total + 2;
+                    updateProgress();
+                }
+            }
+
+            if (data.phase === 'writing') {
+                if (data.status === 'generating') {
+                    addStep(data.message, 'active');
+                    if (data.total) totalSteps = data.total + 2;
+                } else {
+                    updateLastStep(data.message, 'done');
+                    stepCount++;
+                    updateProgress();
+                }
+            }
+
+            if (data.phase === 'pdf') {
+                if (data.status === 'generating') {
+                    addStep('Converting to PDF...', 'active');
+                } else {
+                    updateLastStep('PDF converted successfully', 'done');
+                    stepCount++;
+                    updateProgress();
+                }
+            }
+
+            if (data.phase === 'complete') {
+                document.getElementById('resultCard').classList.add('active');
+                document.getElementById('resultTitle').textContent = data.title || 'eBook Ready!';
+                document.getElementById('resultSubtitle').textContent = 'Your professional PDF has been generated.';
+                document.getElementById('downloadBtn').href = '/download/' + data.filename;
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressCounter').textContent = '100%';
+                resetButton();
+            }
+        }
+
+        // ========= UI HELPERS =========
+        function addStep(text, status) {
+            const list = document.getElementById('stepList');
+            const li = document.createElement('li');
+            li.className = `step-item ${status}`;
+            let icon = '&#9711;', iconClass = 'pending';
+            if (status === 'active') { icon = '&#9881;'; iconClass = 'active'; }
+            else if (status === 'done') { icon = '&#10003;'; iconClass = 'done'; }
+            else if (status === 'error') { icon = '&#10007;'; iconClass = 'error'; }
+            li.innerHTML = `<div class="step-icon ${iconClass}">${icon}</div><span class="step-text">${text}</span>`;
+            list.appendChild(li);
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function updateLastStep(text, status) {
+            const list = document.getElementById('stepList');
+            const items = list.querySelectorAll('.step-item');
+            if (items.length === 0) return;
+            const last = items[items.length - 1];
+            last.className = `step-item ${status}`;
+            let icon = '&#10003;', iconClass = 'done';
+            if (status === 'error') { icon = '&#10007;'; iconClass = 'error'; }
+            last.querySelector('.step-icon').className = `step-icon ${iconClass}`;
+            last.querySelector('.step-icon').innerHTML = icon;
+            last.querySelector('.step-text').textContent = text;
+        }
+
+        function updateProgress() {
+            const pct = Math.min(Math.round((stepCount / totalSteps) * 100), 99);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressCounter').textContent = pct + '%';
+        }
+
+        function showError(msg) {
+            document.getElementById('errorMessage').textContent = msg;
+            document.getElementById('errorCard').classList.add('active');
+        }
+
+        function hideError() { document.getElementById('errorCard').classList.remove('active'); }
+
+        function resetButton() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.querySelector('.btn-text').textContent = 'Generate eBook';
+        }
+
+        function resetApp() {
+            document.getElementById('progressPanel').classList.remove('active');
+            document.getElementById('resultCard').classList.remove('active');
+            document.getElementById('stepList').innerHTML = '';
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressCounter').textContent = '0%';
+            hideError();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('generateBtn').disabled) {
+                startGeneration();
+            }
+        });
+    </script>
+</body>
+</html>

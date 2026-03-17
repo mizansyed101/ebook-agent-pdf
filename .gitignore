@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# eBook Agent Specific
+output/
+content/
+*.pdf
+*.md
+!MASTER_AGENT_PROMPT.md
+!AGENTPROMPT.md
+!prompt python.md
+!requirements.txt
+!README.md
+
+# IDE
+.vscode/
+.idea/
+.gemini/
+.agents/
+.agent/
+_agents/
+_agent/
+brain/
+logs/
+click_feedback/
+landing_page_*.png
+error_state_*.png
+multi_llm_ui_*.webp
+anthropic_selected_ui_*.png
+pdf_preview_*.webp
+title_page_*.png
+table_of_contents_*.png
+body_chapter_*.png
+after_provider_change_*.png
