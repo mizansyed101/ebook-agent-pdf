@@ -79,7 +79,10 @@
                     placeholder="Enter your API key"
                     autocomplete="off"
                 >
-                <div class="form-hint" id="apiKeyHint">Your key is used only for this session and never stored.</div>
+                <div class="form-hint" id="apiKeyHint">
+                    Your key is used only for this session and never stored.<br>
+                    <a id="apiKeyLink" href="#" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-block; margin-top: 5px;">Get your API key here &rarr;</a>
+                </div>
             </div>
 
             <button class="generate-btn" id="generateBtn" onclick="startGeneration()">
@@ -127,28 +130,33 @@
         const PROVIDERS = {
             gemini: {
                 name: "Google Gemini",
-                models: ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"],
-                placeholder: "Enter your Google Gemini API key"
+                models: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-pro-exp"],
+                placeholder: "Enter your Google Gemini API key",
+                apiKeyUrl: "https://aistudio.google.com/app/apikey"
             },
             openai: {
                 name: "OpenAI",
-                models: ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1-nano"],
-                placeholder: "Enter your OpenAI API key (sk-...)"
+                models: ["gpt-4o", "gpt-4o-mini", "o3-mini", "o1-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+                placeholder: "Enter your OpenAI API key (sk-...)",
+                apiKeyUrl: "https://platform.openai.com/api-keys"
             },
             anthropic: {
                 name: "Anthropic Claude",
-                models: ["claude-sonnet-4-20250514", "claude-3-5-haiku-20241022"],
-                placeholder: "Enter your Anthropic API key (sk-ant-...)"
+                models: ["claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
+                placeholder: "Enter your Anthropic API key (sk-ant-...)",
+                apiKeyUrl: "https://console.anthropic.com/settings/keys"
             },
             groq: {
                 name: "Groq",
-                models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
-                placeholder: "Enter your Groq API key (gsk_...)"
+                models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "deepseek-r1-distill-llama-70b", "gemma2-9b-it"],
+                placeholder: "Enter your Groq API key (gsk_...)",
+                apiKeyUrl: "https://console.groq.com/keys"
             },
             openrouter: {
                 name: "OpenRouter",
-                models: ["google/gemini-2.0-flash-exp:free", "meta-llama/llama-3.3-70b-instruct:free", "deepseek/deepseek-chat-v3-0324:free"],
-                placeholder: "Enter your OpenRouter API key (sk-or-...)"
+                models: ["google/gemini-2.0-flash-exp:free", "meta-llama/llama-3.3-70b-instruct:free", "deepseek/deepseek-r1:free", "deepseek/deepseek-chat", "anthropic/claude-3.5-sonnet", "openai/o3-mini"],
+                placeholder: "Enter your OpenRouter API key (sk-or-...)",
+                apiKeyUrl: "https://openrouter.ai/keys"
             }
         };
 
@@ -174,8 +182,12 @@
                 modelSelect.appendChild(opt);
             });
 
-            // Update API key placeholder
+            // Update API key placeholder and link
             document.getElementById('apiKeyInput').placeholder = config.placeholder;
+            const apiKeyLink = document.getElementById('apiKeyLink');
+            if (apiKeyLink) {
+                apiKeyLink.href = config.apiKeyUrl;
+            }
         }
 
         // ========= MAIN FUNCTION =========
