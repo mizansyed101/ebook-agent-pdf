@@ -26,6 +26,7 @@ _agents/
 _agent/
 brain/
 logs/
+node_modules/
 click_feedback/
 landing_page_*.png
 error_state_*.png
